@@ -1,4 +1,4 @@
-%% *** Optimal Train Control - Problem Parameters ***
+%% ***** Optimal Train Control - Problem Parameters *****
 % Given model parameters for problem simulation.
 clear;
 close all;
@@ -10,11 +10,12 @@ c1 = 1000; c2 = 1000; R = 0.3;
 x1f = 10;
 Imin = -2; Imax = 2;
 T = 10;
-x01 = 0; x02 = 0;
+x01 = 0; x02 = -20;
 
 lwidth = 1;
 
-%% Dynamic system simulation w/ optimal controller.
+%% ***** Dynamic system simulation w/ optimal controller. *****
+% PARTS 5 and 6
 tmesh = 0:0.01:T;
 opts = bvpset('Stats', 'on'); % enable stats for bvp solvers.
 
@@ -51,6 +52,7 @@ plot(t,p2,'LineWidth',lwidth);
 title('Costate Variables over Time');
 legend('p1(t)','p2(t)');
 
+% Calculated optimal controller used to drive system.
 M = length(t);
 u_optimal = zeros(1,M);
 test = zeros(1,M);
@@ -70,7 +72,7 @@ disp(J);
 % TPBVP functions for ODEs and BCs
 % *************************************************************************
 
-% Total system s ODEs for simulation.
+% Total system s ODEs for simulation - use nonbounded input.
 % s(1) = x1, s(2) = x2, s(3) = p1, s(4) = p2.
 function dSdt = odefun_unbound(t,s)
     global k1 k2 k3 k4 
@@ -82,7 +84,7 @@ function dSdt = odefun_unbound(t,s)
     dSdt(4) = -k4*u + k1*s(2) - s(3) + 2*k2*s(2)*s(4);
 end
 
-% Total system s ODEs for simulation.
+% Total system s ODEs for simulation - use bounded input.
 % s(1) = x1, s(2) = x2, s(3) = p1, s(4) = p2.
 function dSdt = odefun_bound(t,s)
     global k1 k2 k3 k4 
@@ -106,7 +108,7 @@ function bc = bcfun(s0, stf)
         stf(4)-2*c2*stf(2)];    % stf(4) is p2(tf), stf(2) is p2(tf)
 end
 
-%% *** Optimal Controller Functions ***
+%% ***** Optimal Controller Functions *****
 function [u,t] = opt_controller_bound(p2, x2)
     global k3 k4 R Imax Imin
     t = k3*p2 + k4*x2;
@@ -125,3 +127,12 @@ function [u,t] = opt_controller_unbound(p2, x2)
     
     u = -t/(2*R);
 end
+
+%% ***** Linearizarion around optimal curve *****
+% PART 7
+
+% Linear model for error near optimal curve.
+% y1dot = y2;
+% y2dot = -k1 - 2k2x2 + k3u
+% Costate dynamic equations - Ricatti solutions.
+% 
